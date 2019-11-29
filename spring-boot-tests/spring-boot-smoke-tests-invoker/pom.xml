@@ -15,6 +15,10 @@
 	<properties>
 		<main.basedir>${basedir}/../..</main.basedir>
 	</properties>
+
+	<modules>
+		<module>../spring-boot-smoke-tests/spring-boot-smoke-test-hibernate52</module>
+	</modules>
 	<build>
 		<plugins>
 			<plugin>
