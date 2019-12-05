@@ -70,7 +70,8 @@ public enum WebApplicationType {
 				return WebApplicationType.NONE;
 			}
 		}
-		// WebApplicationType.SERVLET 类型。可以这样判断是因为，引入 Spring MVC 时，若是内嵌的 web 应用，会引用 Servlet 类
+		// WebApplicationType.SERVLET 类型。可以这样判断是因为，引入 Spring MVC 时，若是内嵌的 web 应用，会引用
+		// Servlet 类
 		return WebApplicationType.SERVLET;
 	}
 

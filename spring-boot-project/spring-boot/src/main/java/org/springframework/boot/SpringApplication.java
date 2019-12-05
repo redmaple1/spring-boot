@@ -196,7 +196,7 @@ public class SpringApplication {
 	private static final Log logger = LogFactory.getLog(SpringApplication.class);
 
 	/**
-	 * 主要的 java config 类的数组
+	 * 主要的 java config 类的数组.
 	 */
 	private Set<Class<?>> primarySources;
 
@@ -209,19 +209,19 @@ public class SpringApplication {
 	private boolean logStartupInfo = true;
 
 	/**
-	 * 是否添加 JVM 启动参数
+	 * 是否添加 JVM 启动参数.
 	 */
 	private boolean addCommandLineProperties = true;
 
 	/**
-	 * 是否添加共享的 ConversionService
+	 * 是否添加共享的 ConversionService.
 	 */
 	private boolean addConversionService = true;
 
 	private Banner banner;
 
 	/**
-	 * 资源加载器
+	 * 资源加载器.
 	 */
 	private ResourceLoader resourceLoader;
 
@@ -232,7 +232,7 @@ public class SpringApplication {
 	private Class<? extends ConfigurableApplicationContext> applicationContextClass;
 
 	/**
-	 * web 应用类型
+	 * web 应用类型.
 	 */
 	private WebApplicationType webApplicationType;
 
@@ -245,17 +245,20 @@ public class SpringApplication {
 	private List<ApplicationListener<?>> listeners;
 
 	/**
-	 * 默认的属性集合
+	 * 默认的属性集合.
 	 */
 	private Map<String, Object> defaultProperties;
 
 	/**
-	 * 附加的 profiles 的数组
+	 * 附加的 profiles 的数组.
 	 */
 	private Set<String> additionalProfiles = new HashSet<>();
 
 	private boolean allowBeanDefinitionOverriding;
 
+	/**
+	 * 是否是自定义 environment.
+	 */
 	private boolean isCustomEnvironment = false;
 
 	private boolean lazyInitialization = false;
@@ -374,14 +377,19 @@ public class SpringApplication {
 		// 创建 ConfigurableEnvironment 对象，并进行配置
 		ConfigurableEnvironment environment = getOrCreateEnvironment();
 		configureEnvironment(environment, applicationArguments.getSourceArgs());
-		// todo 待看
+		// 将 ConfigurationPropertySource 支持附加到指定的环境
 		ConfigurationPropertySources.attach(environment);
+		// 通知 SpringApplicationRunListener 的数组，环境变量已经准备完成
 		listeners.environmentPrepared(environment);
+		// 绑定 environment 到 SpringApplication 上 (StandardEnvironment 打断点，bindResult null，todo 不知何用)
 		bindToSpringApplication(environment);
+		// 如果非自定义 environment，则根据条件转换 （默认为false，会执行以下条件）
 		if (!this.isCustomEnvironment) {
+			// 一般情况下都会返回 environment 本身
 			environment = new EnvironmentConverter(getClassLoader()).convertEnvironmentIfNecessary(environment,
 					deduceEnvironmentClass());
 		}
+		// 如果有 attach 到 environment 上的 MutablePropertySources,则添加到 environment 的 PropertySource 中
 		ConfigurationPropertySources.attach(environment);
 		return environment;
 	}
@@ -548,7 +556,7 @@ public class SpringApplication {
 		// 来自启动参数的属性
 		if (this.addCommandLineProperties && args.length > 0) {
 			String name = CommandLinePropertySource.COMMAND_LINE_PROPERTY_SOURCE_NAME;
-			if (sources.contains(name)) { //已存在，就进行替换
+			if (sources.contains(name)) { // 已存在，就进行替换
 				PropertySource<?> source = sources.get(name);
 				CompositePropertySource composite = new CompositePropertySource(name);
 				composite.addPropertySource(
@@ -1276,7 +1284,7 @@ public class SpringApplication {
 	 * @return the running {@link ApplicationContext}
 	 */
 	public static ConfigurableApplicationContext run(Class<?>[] primarySources, String[] args) {
-		//创建 SpringApplication 对象，并运行
+		// 创建 SpringApplication 对象，并运行
 		return new SpringApplication(primarySources).run(args);
 	}
 
