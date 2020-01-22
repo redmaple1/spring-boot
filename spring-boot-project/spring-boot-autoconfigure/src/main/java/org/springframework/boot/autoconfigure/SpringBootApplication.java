@@ -48,8 +48,11 @@ import org.springframework.data.repository.Repository;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
+// 使用此注解声明出来的自定义注解，在使用此自定义注解时，若注解在类上面时，子类会自动继承此注解，否则，子类不会继承此注解
 @Inherited
+// 标记这是一个 Spring Boot 配置类
 @SpringBootConfiguration
+// 用于开启自动配置功能
 @EnableAutoConfiguration
 @ComponentScan(excludeFilters = { @Filter(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class),
 		@Filter(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class) })

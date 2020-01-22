@@ -342,29 +342,42 @@ public class SpringApplication {
 			// 加载属性配置。执行完成后，所有的 environment 的属性都会加载进来，包括 application.properties 和外部的属性配置
 			ConfigurableEnvironment environment = prepareEnvironment(listeners, applicationArguments);
 			configureIgnoreBeanInfo(environment);
+			// 打印 Spring Banner
 			Banner printedBanner = printBanner(environment);
+			// 创建 Spring 容器
 			context = createApplicationContext();
+			// 异常报告器
 			exceptionReporters = getSpringFactoriesInstances(SpringBootExceptionReporter.class,
 					new Class[] { ConfigurableApplicationContext.class }, context);
+			// 准备 ApplicationContext 对象，主要是调用所有初始化类的 initialize 方法，初始化它的一些属性
 			prepareContext(context, environment, listeners, applicationArguments, printedBanner);
+			// 启动（刷新）Spring 容器
 			refreshContext(context);
+			// 执行 Spring 容器的初始化的后置逻辑。默认实现为空。
 			afterRefresh(context, applicationArguments);
+			// 停止 StopWatch 统计时长
 			stopWatch.stop();
+			// 打印 Spring Boot 启动的时长日志
 			if (this.logStartupInfo) {
 				new StartupInfoLogger(this.mainApplicationClass).logStarted(getApplicationLog(), stopWatch);
 			}
+			// 通知 SpringApplicationRunListener 的数组，Spring 容器启动完成
 			listeners.started(context);
+			// 调用ApplicationRunner 或者 CommandLineRunner 的运行方法
 			callRunners(context, applicationArguments);
 		}
 		catch (Throwable ex) {
+			// 若发生异常，则进行处理，并抛出 IllegalStateException 异常
 			handleRunFailure(context, ex, exceptionReporters, listeners);
 			throw new IllegalStateException(ex);
 		}
 
 		try {
+			// 通知 SpringApplicationRunListener 的数组，Spring 容器运行中
 			listeners.running(context);
 		}
 		catch (Throwable ex) {
+			// 若发生异常，则进行处理，并抛出 IllegalStateException 异常
 			handleRunFailure(context, ex, exceptionReporters, null);
 			throw new IllegalStateException(ex);
 		}
@@ -407,15 +420,21 @@ public class SpringApplication {
 
 	private void prepareContext(ConfigurableApplicationContext context, ConfigurableEnvironment environment,
 			SpringApplicationRunListeners listeners, ApplicationArguments applicationArguments, Banner printedBanner) {
+		// 设置 context 的 environment 属性
 		context.setEnvironment(environment);
+		// 设置 context 的一些属性
 		postProcessApplicationContext(context);
+		// 初始化 ApplicationContextInitializer
 		applyInitializers(context);
+		// 通知 SpringApplicationRunListener 的数组，Spring 容器准备完成
 		listeners.contextPrepared(context);
+		// 打印日志
 		if (this.logStartupInfo) {
 			logStartupInfo(context.getParent() == null);
 			logStartupProfileInfo(context);
 		}
 		// Add boot specific singleton beans
+		// 设置 beanFactory 的属性
 		ConfigurableListableBeanFactory beanFactory = context.getBeanFactory();
 		beanFactory.registerSingleton("springApplicationArguments", applicationArguments);
 		if (printedBanner != null) {
@@ -429,14 +448,18 @@ public class SpringApplication {
 			context.addBeanFactoryPostProcessor(new LazyInitializationBeanFactoryPostProcessor());
 		}
 		// Load the sources
+		// 加载 BeanDefinition 们
 		Set<Object> sources = getAllSources();
 		Assert.notEmpty(sources, "Sources must not be empty");
 		load(context, sources.toArray(new Object[0]));
+		// 通知 SpringApplicationRunListener 的数组，Spring 容器加载完成
 		listeners.contextLoaded(context);
 	}
 
 	private void refreshContext(ConfigurableApplicationContext context) {
+		// 开启（刷新）Spring 容器
 		refresh(context);
+		// 注册 ShutdownHook 钩子。这个钩子，主要用于 Spring 应用关闭时，摧毁响应的 Bean 们
 		if (this.registerShutdownHook) {
 			try {
 				context.registerShutdownHook();
@@ -627,6 +650,7 @@ public class SpringApplication {
 	 * @see #setApplicationContextClass(Class)
 	 */
 	protected ConfigurableApplicationContext createApplicationContext() {
+		// 根据 webApplicationType 类型，获得 ApplicationContext 类型
 		Class<?> contextClass = this.applicationContextClass;
 		if (contextClass == null) {
 			try {
@@ -646,6 +670,7 @@ public class SpringApplication {
 						"Unable create a default ApplicationContext, please specify an ApplicationContextClass", ex);
 			}
 		}
+		// 创建 ApplicationContext 对象
 		return (ConfigurableApplicationContext) BeanUtils.instantiateClass(contextClass);
 	}
 
@@ -680,10 +705,13 @@ public class SpringApplication {
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	protected void applyInitializers(ConfigurableApplicationContext context) {
+		// 遍历 ApplicationContextInitializer 数组
 		for (ApplicationContextInitializer initializer : getInitializers()) {
+			// 校验 ApplicationContextInitializer 的泛型非空
 			Class<?> requiredType = GenericTypeResolver.resolveTypeArgument(initializer.getClass(),
 					ApplicationContextInitializer.class);
 			Assert.isInstanceOf(requiredType, context, "Unable to call initializer.");
+			// 初始化 ApplicationContextInitializer
 			initializer.initialize(context);
 		}
 	}
@@ -739,7 +767,9 @@ public class SpringApplication {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Loading source " + StringUtils.arrayToCommaDelimitedString(sources));
 		}
+		// 创建 BeanDefinitionLoader 对象
 		BeanDefinitionLoader loader = createBeanDefinitionLoader(getBeanDefinitionRegistry(context), sources);
+		// 设置 loader 的属性
 		if (this.beanNameGenerator != null) {
 			loader.setBeanNameGenerator(this.beanNameGenerator);
 		}
@@ -749,6 +779,7 @@ public class SpringApplication {
 		if (this.environment != null) {
 			loader.setEnvironment(this.environment);
 		}
+		// 执行 BeanDefinition 加载
 		loader.load();
 	}
 
@@ -804,7 +835,9 @@ public class SpringApplication {
 	 * @param applicationContext the application context to refresh
 	 */
 	protected void refresh(ApplicationContext applicationContext) {
+		// 断言，判断 applicationContext 是 AbstractApplicationContext 的子类
 		Assert.isInstanceOf(AbstractApplicationContext.class, applicationContext);
+		// 启动（刷新）AbstractApplicationContext
 		((AbstractApplicationContext) applicationContext).refresh();
 	}
 
@@ -817,10 +850,15 @@ public class SpringApplication {
 	}
 
 	private void callRunners(ApplicationContext context, ApplicationArguments args) {
+		// 获得所有 Runner 们
 		List<Object> runners = new ArrayList<>();
+		// 获得所有 ApplicationRunner Bean 们
 		runners.addAll(context.getBeansOfType(ApplicationRunner.class).values());
+		// 获得所有 CommandLineRunner Bean 们
 		runners.addAll(context.getBeansOfType(CommandLineRunner.class).values());
+		// 排序 runners
 		AnnotationAwareOrderComparator.sort(runners);
+		// 遍历 Runner 数组，执行逻辑
 		for (Object runner : new LinkedHashSet<>(runners)) {
 			if (runner instanceof ApplicationRunner) {
 				callRunner((ApplicationRunner) runner, args);
